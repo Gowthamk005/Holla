@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+   import { useAppTime } from "../hooks/useAppTime.js";
 import { api } from "../api.js";
 import { disconnectSocket, getSocket } from "../lib/socket.js";
 import { CATEGORIES } from "../lib/constants.js";
@@ -8,6 +9,7 @@ import Avatar from "./Avatar.jsx";
 
 export default function Layout() {
   const { user, logout } = useAuth();
+     useAppTime(!!user);
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState("");
@@ -55,8 +57,7 @@ export default function Layout() {
           <button type="submit" aria-label="Search">🔍</button>
         </form>
         <div className="header-right">
-          <Link to={user ? "/studio" : loginLink} className="upload-btn">＋ Create</Link>
-          {user && (
+            <Link to={user ? "/create" : loginLink} className="create-btn" title="Create" aria-label="Create">＋</Link>          {user && (
             <Link to="/messages" className="icon-btn" title="Messages">
               💬{unread > 0 && <span className="badge">{unread > 9 ? "9+" : unread}</span>}
             </Link>
@@ -72,8 +73,8 @@ export default function Layout() {
                     <Avatar user={user} size="sm" />
                     <div><b>{user.name}</b><small>@{user.username}</small></div>
                   </div>
-                  <Link to={`/c/${user.username}`} onClick={() => setMenu(false)}>Your channel</Link>
-                  <Link to="/studio" onClick={() => setMenu(false)}>Studio</Link>
+                  <Link to="/me" onClick={() => setMenu(false)}>Your profile</Link>
+                  <Link to="/settings" onClick={() => setMenu(false)}>Settings</Link>                  <Link to="/studio" onClick={() => setMenu(false)}>Studio</Link>
                   <Link to="/wallet" onClick={() => setMenu(false)}>Holla Pay</Link>
                   {user.role === "admin" && <Link to="/admin" onClick={() => setMenu(false)}>Admin</Link>}
                   <button onClick={doLogout}>Logout</button>

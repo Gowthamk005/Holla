@@ -9,6 +9,7 @@ const videoSchema = new Schema(
     title: { type: String, required: true, trim: true, maxlength: 100 },
     description: { type: String, default: "", maxlength: 500 },
     category: { type: String, enum: CATEGORIES, required: true },
+        format: { type: String, enum: ["video", "short"], default: "video" },
     videoUrl: { type: String, required: true },
     thumbnailUrl: { type: String, default: "" },
     videoFile: { type: String, default: "" },
@@ -17,6 +18,7 @@ const videoSchema = new Schema(
     size: { type: Number, default: 0, min: 0 },
     renditions: { type: [{ label: String, height: Number, url: String }], default: [] },
     views: { type: Number, default: 0, min: 0 },
+        commentsCount: { type: Number, default: 0, min: 0 },
     likesCount: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }

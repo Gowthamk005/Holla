@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useWatchTracking } from "../hooks/useWatchTracking.js";
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const QUALITIES = [1080, 720, 480, 360, 240, 144];
@@ -31,6 +32,7 @@ export default function VideoPlayer({ video }) {
   const [showUi, setShowUi] = useState(true);
   const [panel, setPanel] = useState(null); // null | "main" | "quality" | "speed"
   const [isFull, setIsFull] = useState(false);
+  useWatchTracking(vRef, video.id, playing);
 
   // "original" plus 144p to 1080p. A size is "ready" only if the server made that copy.
   const made = new Map((video.renditions || []).map((r) => [r.height, r]));

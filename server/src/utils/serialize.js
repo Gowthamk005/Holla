@@ -32,7 +32,9 @@ export const videoOut = (v) => ({
   likesCount: v.likesCount || 0,
   createdAt: v.createdAt,
   renditions: (v.renditions || []).map((r) => ({ label: r.label, height: r.height, url: r.url })),  
-  owner: pubUser(v.owner),
+    format: v.format || "video",
+      commentsCount: v.commentsCount || 0,
+    owner: pubUser(v.owner),
 });
 
 export const msgOut = (m) => {

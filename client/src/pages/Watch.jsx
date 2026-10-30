@@ -8,6 +8,7 @@ import Avatar from "../components/Avatar.jsx";
 import SubscribeButton from "../components/SubscribeButton.jsx";
 import VideoCard from "../components/VideoCard.jsx";
 import VideoPlayer from "./VideoPlayer.jsx";
+import Comments from "../components/Comments.jsx";
 
 export default function Watch() {
   const { id } = useParams();
@@ -90,6 +91,7 @@ export default function Watch() {
           </div>
           <p>{video.description || "No description."}</p>
         </div>
+          <Comments videoId={video.id} ownerId={video.owner.id} />
       </div>
 
       <aside className="related">

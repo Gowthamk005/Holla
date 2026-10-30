@@ -1,8 +1,9 @@
-/* One place for every API call. Cookies carry the login (httpOnly), so we always send credentials. */
+import { getViewerId } from "./lib/viewer.js";
+
 export async function api(path, { method = "GET", body, form } = {}) {
-  const opts = { method, credentials: "include", headers: {} };
+  const opts = { method, credentials: "include", headers: { "X-Viewer": getViewerId() } };
   if (form) {
-    opts.body = form; // browser sets the multipart boundary itself
+    opts.body = form;
   } else if (body !== undefined) {
     opts.headers["Content-Type"] = "application/json";
     opts.body = JSON.stringify(body);

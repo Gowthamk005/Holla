@@ -16,7 +16,9 @@ import YouTube from "./pages/YouTube.jsx";
 import YouTubeWatch from "./pages/YouTubeWatch.jsx";
 import Apps from "./pages/Apps.jsx";
 import VideoPlayer from "./pages/VideoPlayer.jsx";
-
+import Create from "./pages/Create.jsx";
+import Profile from "./pages/Profile.jsx";
+import Settings from "./pages/Settings.jsx";
 export default function App() {
   return (
     <Routes>
@@ -40,7 +42,9 @@ export default function App() {
         <Route path="studio" element={<RequireAuth><Studio /></RequireAuth>} />
         <Route path="admin" element={<RequireAuth role="admin"><Admin /></RequireAuth>} />
         <Route path="*" element={<div className="empty"><h2>Page not found</h2></div>} />
-        
+        <Route path="/create" element={<RequireAuth><Create /></RequireAuth>} />
+           <Route path="me" element={<RequireAuth><Profile /></RequireAuth>} />
+   <Route path="settings" element={<RequireAuth><Settings /></RequireAuth>} />
       </Route>
     </Routes>
   );
