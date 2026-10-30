@@ -97,9 +97,9 @@ router.get("/:id", optionalAuth, async (req, res) => {
   const viewer = { liked: false, saved: false, subscribed: false };
   if (req.user) {
     const [inter, sub] = await Promise.all([
-     Comment.deleteMany({ video: v._id }),
-      Interaction.find({ user: req.user._id, video: v._id }).select("type"),
-      Subscription.exists({ subscriber: req.user._id, channel: v.owner._id }),
+  Interaction.find({ user: req.user._id, video: v._id }).select("type").lean(),
+  Subscription.exists({ subscriber: req.user._id, channel: v.owner._id }),
+
     ]);
     viewer.liked = inter.some((i) => i.type === "like");
     viewer.saved = inter.some((i) => i.type === "save");
