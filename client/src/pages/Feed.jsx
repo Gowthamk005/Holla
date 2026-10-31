@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import { CATEGORIES, categoryLabel } from "../lib/constants.js";
 import VideoCard from "../components/VideoCard.jsx";
-import YouTubeRow from "../components/YouTubeRow.jsx";
+import ShortsRow from "../components/ShortsRow.jsx";
 
 /* Used for Home (/), Trending (/trending) and category pages (/category/:cat) */
 export default function Feed({ mode = "home" }) {
@@ -20,7 +20,7 @@ export default function Feed({ mode = "home" }) {
   useEffect(() => {
     setVideos(null);
     setErr("");
-    const qs = new URLSearchParams({ sort });
+    const qs = new URLSearchParams({ sort, format: "video" });
     if (category) qs.set("category", category);
     if (q) qs.set("q", q);
     api(`/videos?${qs}`).then((d) => setVideos(d.videos)).catch((e) => setErr(e.message));
@@ -35,6 +35,7 @@ export default function Feed({ mode = "home" }) {
   return (
     <div>
       {title && <h1 className="page-title">{title}</h1>}
+
       {mode === "home" && !q && (
         <div className="chips">
           <button className={chip === "all" ? "chip active" : "chip"} onClick={() => setChip("all")}>All</button>
@@ -45,17 +46,19 @@ export default function Feed({ mode = "home" }) {
           ))}
         </div>
       )}
+
       {err && <p className="error">{err}</p>}
       {!err && videos === null && <p className="muted">Loading…</p>}
       {videos && videos.length === 0 && (
-        <div className="empty"><h2>No videos here yet</h2><p>Be the first to upload one from Create.</p></div>
+        <div className="empty"><h2>No videos here yet</h2><p>Tap + at the bottom to upload one.</p></div>
       )}
       {videos && videos.length > 0 && (
         <div className="video-grid">
           {videos.map((v) => <VideoCard key={v.id} video={v} />)}
         </div>
       )}
-      {mode === "home" && !q && <div className="gap-top"><YouTubeRow /></div>}
+
+      {mode === "home" && !q && <ShortsRow />}
     </div>
   );
 }

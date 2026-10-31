@@ -53,7 +53,7 @@ router.post("/video/:videoId", requireAuth, async (req, res) => {
   res.status(201).json({ comment: out(c, req.user) });
 });
 
-/* PATCH /api/comments/:id  { text }  (author only) */
+/* PATCH /api/comments/:id  { text }  — the AUTHOR only */
 router.patch("/:id", requireAuth, async (req, res) => {
   if (!isId(req.params.id)) fail(404, "Comment not found.");
   const c = await Comment.findById(req.params.id);
@@ -68,18 +68,15 @@ router.patch("/:id", requireAuth, async (req, res) => {
   res.json({ comment: out(c, req.user) });
 });
 
-/* DELETE /api/comments/:id  (author, video owner, or admin) */
+/* DELETE /api/comments/:id — the AUTHOR or an admin only (video owners cannot delete other people's comments) */
 router.delete("/:id", requireAuth, async (req, res) => {
   if (!isId(req.params.id)) fail(404, "Comment not found.");
   const c = await Comment.findById(req.params.id);
   if (!c) fail(404, "Comment not found.");
 
-  const video = await Video.findById(c.video).select("owner");
-  const allowed =
-    String(c.user) === String(req.user._id) ||
-    (video && String(video.owner) === String(req.user._id)) ||
-    req.user.role === "admin";
-  if (!allowed) fail(403, "You cannot delete this comment.");
+  const isAuthor = String(c.user) === String(req.user._id);
+  const isAdmin = req.user.role === "admin";
+  if (!isAuthor && !isAdmin) fail(403, "You can only delete your own comments.");
 
   await Comment.deleteOne({ _id: c._id });
   await Video.updateOne({ _id: c.video }, { $inc: { commentsCount: -1 } });

@@ -7,9 +7,10 @@ import { categoryLabel } from "../lib/constants.js";
 import Avatar from "../components/Avatar.jsx";
 import SubscribeButton from "../components/SubscribeButton.jsx";
 import VideoCard from "../components/VideoCard.jsx";
-import VideoPlayer from "./VideoPlayer.jsx";
+import VideoPlayer from "../components/VideoPlayer.jsx"
 import Comments from "../components/Comments.jsx";
 
+/* Normal (16:9) video page. Shorts are sent to the vertical Shorts viewer. */
 export default function Watch() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -23,15 +24,19 @@ export default function Watch() {
     setData(null);
     setErr("");
     setRelated([]);
+    // NOTE: no view is counted here. The player counts a view after 3 seconds of playing.
     api(`/videos/${id}`)
       .then((d) => {
+        if (d.video.format === "short") {
+          navigate(`/shorts/${id}`, { replace: true });
+          return;
+        }
         setData(d);
         api(`/videos?category=${d.video.category}&limit=12`)
           .then((r) => setRelated(r.videos.filter((v) => v.id !== id)))
           .catch(() => {});
       })
       .catch((e) => setErr(e.message));
-    api(`/videos/${id}/view`, { method: "POST" }).catch(() => {});
   }, [id]);
 
   async function interact(type) {
@@ -66,7 +71,7 @@ export default function Watch() {
   return (
     <div className="watch">
       <div className="watch-main">
-      <VideoPlayer key={video.id} video={video} />
+        <VideoPlayer key={video.id} video={video} />
         <h1 className="watch-title">{video.title}</h1>
 
         <div className="watch-bar">
@@ -91,7 +96,8 @@ export default function Watch() {
           </div>
           <p>{video.description || "No description."}</p>
         </div>
-          <Comments videoId={video.id} ownerId={video.owner.id} />
+
+        <Comments videoId={video.id} />
       </div>
 
       <aside className="related">

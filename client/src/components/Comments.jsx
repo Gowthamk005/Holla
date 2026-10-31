@@ -5,8 +5,15 @@ import { api } from "../api.js";
 import { timeAgo } from "../lib/format.js";
 import Avatar from "./Avatar.jsx";
 
-/* Comments under a video. ownerId lets the video owner delete any comment on their video. */
-export default function Comments({ videoId, ownerId }) {
+/*
+ * Comments under a video or short.
+ * Rules (checked on the server too):
+ * - Anyone logged in can comment.
+ * - Only the author can EDIT their comment.
+ * - Only the author (or an admin) can DELETE a comment.
+ * The ⋯ button opens a menu overlay with the actions that are allowed.
+ */
+export default function Comments({ videoId }) {
   const { user } = useAuth();
   const [list, setList] = useState([]);
   const [total, setTotal] = useState(0);
@@ -14,6 +21,7 @@ export default function Comments({ videoId, ownerId }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(null); // { id, text }
+  const [sheet, setSheet] = useState(null);     // comment whose ⋯ menu is open
   const [err, setErr] = useState("");
 
   async function load(before) {
@@ -31,6 +39,9 @@ export default function Comments({ videoId, ownerId }) {
     setList([]);
     load();
   }, [videoId]);
+
+  const canEdit = (c) => !!user && user.id === c.user.id;
+  const canDelete = (c) => !!user && (user.id === c.user.id || user.role === "admin");
 
   async function post(e) {
     e.preventDefault();
@@ -62,6 +73,7 @@ export default function Comments({ videoId, ownerId }) {
   }
 
   async function remove(c) {
+    setSheet(null);
     if (!confirm("Delete this comment?")) return;
     try {
       await api(`/comments/${c.id}`, { method: "DELETE" });
@@ -72,8 +84,10 @@ export default function Comments({ videoId, ownerId }) {
     }
   }
 
-  const canManage = (c) =>
-    user && (user.id === c.user.id || user.id === ownerId || user.role === "admin");
+  function startEdit(c) {
+    setSheet(null);
+    setEditing({ id: c.id, text: c.text });
+  }
 
   return (
     <section className="comments">
@@ -82,15 +96,8 @@ export default function Comments({ videoId, ownerId }) {
       {user ? (
         <form className="comment-form" onSubmit={post}>
           <Avatar user={user} size="sm" />
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Add a comment…"
-            maxLength={500}
-          />
-          <button className="subscribe-btn" disabled={busy || !text.trim()}>
-            {busy ? "…" : "Comment"}
-          </button>
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment…" maxLength={500} />
+          <button className="subscribe-btn" disabled={busy || !text.trim()}>{busy ? "…" : "Comment"}</button>
         </form>
       ) : (
         <p className="muted small">
@@ -108,15 +115,20 @@ export default function Comments({ videoId, ownerId }) {
           <div className="grow">
             <div className="comment-head">
               <Link to={`/c/${c.user.username}`} className="comment-name">{c.user.name}</Link>
-              <span className="muted small">
-                {timeAgo(c.createdAt)}{c.editedAt ? " · edited" : ""}
-              </span>
+              <span className="muted small">{timeAgo(c.createdAt)}{c.editedAt ? " · edited" : ""}</span>
+              {(canEdit(c) || canDelete(c)) && editing?.id !== c.id && (
+                <button className="cmt-more" onClick={() => setSheet(c)} aria-label="Comment options">⋯</button>
+              )}
             </div>
 
             {editing?.id === c.id ? (
               <div className="comment-edit">
-                <input value={editing.text} maxLength={500}
-                  onChange={(e) => setEditing({ ...editing, text: e.target.value })} />
+                <input
+                  value={editing.text}
+                  maxLength={500}
+                  autoFocus
+                  onChange={(e) => setEditing({ ...editing, text: e.target.value })}
+                />
                 <div className="row">
                   <button className="pill" onClick={saveEdit}>Save</button>
                   <button className="pill" onClick={() => setEditing(null)}>Cancel</button>
@@ -124,15 +136,6 @@ export default function Comments({ videoId, ownerId }) {
               </div>
             ) : (
               <div className="comment-text">{c.text}</div>
-            )}
-
-            {canManage(c) && editing?.id !== c.id && (
-              <div className="comment-actions">
-                {user.id === c.user.id && (
-                  <button className="link" onClick={() => setEditing({ id: c.id, text: c.text })}>Edit</button>
-                )}
-                <button className="link danger" onClick={() => remove(c)}>Delete</button>
-              </div>
             )}
           </div>
         </div>
@@ -144,6 +147,27 @@ export default function Comments({ videoId, ownerId }) {
         </button>
       )}
       {total === 0 && <p className="muted small">Be the first to comment.</p>}
+
+      {sheet && (
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <p className="muted small" style={{ margin: 0 }}>Comment by {sheet.user.name}</p>
+            {canEdit(sheet) && (
+              <button className="sheet-btn" onClick={() => startEdit(sheet)}>
+                ✎ Edit comment
+                <small>Change the text. It will show as edited.</small>
+              </button>
+            )}
+            {canDelete(sheet) && (
+              <button className="sheet-btn danger" onClick={() => remove(sheet)}>
+                🗑 Delete comment
+                <small>This cannot be undone.</small>
+              </button>
+            )}
+            <button className="sheet-btn cancel" onClick={() => setSheet(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -1,0 +1,102 @@
+/* =========================================================
+   Fixes: account menu, bottom + button, Shorts viewer,
+   Shorts row, comments menu, watch history, theme
+   ========================================================= */
+
+/* ---------- top bar: avatar button ---------- */
+.avatar-btn { background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; flex: none; }
+.avatar-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- account menu (opens from the top avatar) ---------- */
+.menu-scrim { position: fixed; inset: 0; z-index: 180; background: transparent; }
+.acct-menu {
+  position: fixed; top: calc(var(--header) + 6px); right: 10px;
+  width: min(270px, calc(100vw - 20px)); max-height: calc(100dvh - var(--header) - 20px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 8px;
+  z-index: 190; display: flex; flex-direction: column; box-shadow: 0 18px 44px var(--shadow);
+  animation: vpPop .18s ease both;
+}
+.acct-menu a, .acct-menu button {
+  display: flex; align-items: center; gap: 10px; background: none; border: none; color: var(--text);
+  padding: 11px 12px; border-radius: 10px; font-size: 14.5px; text-align: left; cursor: pointer; text-decoration: none;
+}
+.acct-menu a:hover, .acct-menu button:hover { background: var(--hover); }
+.acct-head { display: flex; gap: 10px; align-items: center; padding: 8px 10px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.acct-head small { display: block; color: var(--muted); }
+.acct-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+.acct-theme { justify-content: space-between; }
+.acct-danger { color: var(--error) !important; }
+
+/* ---------- bottom bar: the + icon ---------- */
+.mobile-nav .plus-nav {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-size: 26px; line-height: 1; margin: 0 auto 2px;
+}
+
+/* ---------- Shorts row on Home ---------- */
+.shorts-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.short-tile { flex: 0 0 150px; color: var(--text); min-width: 0; }
+.short-tile img, .short-tile .thumb-empty { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 14px; background: var(--soft); display: block; }
+.short-tile-title { font-size: 13px; font-weight: bold; margin-top: 6px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- Shorts viewer (vertical, full screen) ---------- */
+.shorts-page { position: relative; margin: -16px -12px 0; height: calc(100dvh - var(--header) - 64px); background: #000; overflow: hidden; }
+@media (min-width: 801px) { .shorts-page { margin: -22px -24px 0; height: calc(100dvh - var(--header)); } }
+.shorts-scroll { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
+.shorts-scroll::-webkit-scrollbar { display: none; }
+.short-slide { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; }
+.short-frame { position: relative; height: 100%; aspect-ratio: 9 / 16; max-width: 100%; background: #000; }
+.short-frame .vp { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+.short-frame .vp video { object-fit: contain; }
+.short-poster { width: 100%; height: 100%; object-fit: cover; display: block; }
+.short-info { position: absolute; left: 14px; right: 84px; bottom: 22px; color: #fff; z-index: 3; text-shadow: 0 1px 4px rgba(0,0,0,.7); pointer-events: none; }
+.short-info a { pointer-events: auto; color: #fff; }
+.short-channel { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.short-channel b { font-size: 15px; }
+.short-title { font-size: 14px; line-height: 1.35; }
+.short-side { position: absolute; right: 10px; bottom: 26px; display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 3; }
+.side-btn { background: rgba(0,0,0,.45); border: none; color: #fff; width: 52px; padding: 8px 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font-size: 20px; }
+.side-btn small { font-size: 12px; }
+.side-btn.on { background: var(--accent); }
+.comments-sheet { max-height: 80dvh; display: flex; flex-direction: column; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.sheet-scroll { overflow-y: auto; }
+
+/* ---------- comments: ⋯ menu ---------- */
+.comment-head { position: relative; flex-wrap: wrap; }
+.cmt-more { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 2px 8px; border-radius: 50%; }
+.cmt-more:hover { color: var(--text); background: var(--hover); }
+.comment-text { font-size: 14.5px; }
+
+/* ---------- watch history page ---------- */
+.hist-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.hist-search { max-width: 320px; border-radius: 22px; }
+.hist-group { margin-bottom: 26px; }
+.hist-group-title { font-size: 15px; margin: 0 0 10px; color: var(--text-soft); }
+.hist-row { display: flex; align-items: center; gap: 14px; padding: 8px; border-radius: 12px; margin-bottom: 8px; }
+.hist-row:hover { background: var(--surface); }
+.hist-thumb { position: relative; width: 200px; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: var(--soft); flex: none; display: block; }
+.hist-thumb.short { width: 96px; aspect-ratio: 9 / 16; }
+.hist-thumb img, .hist-thumb .thumb-empty { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hist-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(0,0,0,.45); }
+.hist-bar i { display: block; height: 100%; background: var(--accent); }
+.hist-title { font-weight: bold; line-height: 1.3; display: block; }
+.hist-remove { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 6px 10px; border-radius: 50%; }
+.hist-remove:hover { background: var(--hover); color: var(--text); }
+
+/* ---------- small helpers used by the new pages ---------- */
+.section-head { display: flex; justify-content: space-between; align-items: center; }
+.gap-top { margin-top: 30px; }
+.section-title { margin: 0 0 12px; }
+.page-title { font-size: 26px; margin-bottom: 18px; }
+
+@media (max-width: 800px) {
+  .hist-thumb { width: 150px; }
+  .hist-thumb.short { width: 80px; }
+  .short-tile { flex-basis: 128px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acct-menu { animation: none; }
+  .shorts-scroll { scroll-behavior: auto; }
+}
