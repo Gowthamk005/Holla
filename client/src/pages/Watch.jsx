@@ -7,7 +7,7 @@ import { categoryLabel } from "../lib/constants.js";
 import Avatar from "../components/Avatar.jsx";
 import SubscribeButton from "../components/SubscribeButton.jsx";
 import VideoCard from "../components/VideoCard.jsx";
-import VideoPlayer from "../components/VideoPlayer.jsx"
+import VideoPlayer from "../components/VideoPlayer.jsx";
 import Comments from "../components/Comments.jsx";
 
 /* Normal (16:9) video page. Shorts are sent to the vertical Shorts viewer. */
