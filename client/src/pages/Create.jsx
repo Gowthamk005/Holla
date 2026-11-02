@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import { CATEGORIES } from "../lib/constants.js";
+import { extractHashtags } from "../lib/hashtags.js";
 
 const TABS = [
   { key: "video", label: "Video", icon: "🎬", title: "Upload a video", text: "Landscape video, 16:9, like YouTube." },
@@ -18,6 +19,7 @@ export default function Create() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [images, setImages] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
   const [thumb, setThumb] = useState(null);
   const [form, setForm] = useState({ title: "", description: "", category: "movies", caption: "" });
   const [busy, setBusy] = useState(false);
@@ -25,6 +27,19 @@ export default function Create() {
 
   const info = TABS.find((t) => t.key === tab);
   const hasSelection = tab === "post" ? images.length > 0 : !!file;
+  const tags = extractHashtags(`${form.title} ${form.description}`);
+
+  useEffect(() => {
+    const urls = images.map((f) => URL.createObjectURL(f));
+    setImageUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [images]);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   function switchTab(key) {
     setTab(key);
@@ -35,19 +50,23 @@ export default function Create() {
     setMsg({ type: "", text: "" });
   }
 
-  // checks the shape of the chosen video before uploading
+  // checks the shape of the chosen video before the details step
   function chooseVideo(f) {
     setFile(f);
-    setPreview(URL.createObjectURL(f));
-    const probe = document.createElement("video");
     const url = URL.createObjectURL(f);
+    setPreview(url);
+    const probe = document.createElement("video");
     probe.preload = "metadata";
     probe.onloadedmetadata = () => {
-      const w = probe.videoWidth, h = probe.videoHeight;
-      if (tab === "video" && h > w * 0.85) setMsg({ type: "error", text: "This looks vertical. Choose Short (9:16) instead." });
-      else if (tab === "short" && w > h * 0.85) setMsg({ type: "error", text: "This looks landscape. Choose Video (16:9) instead." });
-      else setMsg({ type: "", text: "" });
-      URL.revokeObjectURL(url);
+      const w = probe.videoWidth;
+      const h = probe.videoHeight;
+      if (tab === "video" && h > w * 0.85) {
+        setMsg({ type: "error", text: "This looks vertical. Choose Short (9:16) instead." });
+      } else if (tab === "short" && w > h * 0.85) {
+        setMsg({ type: "error", text: "This looks landscape. Choose Video (16:9) instead." });
+      } else {
+        setMsg({ type: "", text: "" });
+      }
     };
     probe.src = url;
   }
@@ -101,7 +120,7 @@ export default function Create() {
             <p className="muted">{info.text}</p>
             {tab !== "live" && (
               <button className="create-primary" onClick={() => fileRef.current.click()}>
-                {tab === "post" ? "Choose photos or GIFs" : "Add from gallery"}
+                {tab === "post" ? "Choose photos or GIFs" : "Choose from gallery"}
               </button>
             )}
             {tab === "live" && <button className="create-primary" disabled>Coming soon</button>}
@@ -109,33 +128,52 @@ export default function Create() {
         ) : tab === "post" ? (
           <form className="create-form" onSubmit={publish}>
             <div className="post-preview">
-              {images.map((f, i) => (
-                <img key={i} src={URL.createObjectURL(f)} alt="" />
-              ))}
+              {imageUrls.map((u) => <img key={u} src={u} alt="" />)}
             </div>
-            <textarea rows={3} maxLength={500} placeholder="Write a caption…" value={form.caption}
+            <textarea rows={3} maxLength={500} placeholder="Write a caption… use #hashtags" value={form.caption}
               onChange={(e) => setForm({ ...form, caption: e.target.value })} />
+            <button type="button" className="pill" onClick={() => fileRef.current.click()}>Change photos</button>
             {msg.text && <p className={msg.type === "error" ? "error" : "ok-text"}>{msg.text}</p>}
             <button className="create-primary" disabled={busy}>{busy ? "Posting…" : "Post"}</button>
           </form>
         ) : (
           <form className="create-form" onSubmit={publish}>
             <video className="create-preview" src={preview} controls playsInline />
-            <input placeholder="Title" maxLength={100} value={form.title} required
+
+            <label className="field-label">Title</label>
+            <input placeholder="Title (add #hashtags here too)" maxLength={100} value={form.title} required
               onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <textarea rows={3} maxLength={500} placeholder="Description" value={form.description}
+
+            <label className="field-label">Description</label>
+            <textarea rows={4} maxLength={500}
+              placeholder="Describe your video. Add hashtags like #travel #tamil #vlog"
+              value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
+            <div className="tag-row">
+              {tags.length === 0
+                ? <span className="muted small">Hashtags you type with # will appear here.</span>
+                : tags.map((t) => <span key={t} className="tag-chip">#{t}</span>)}
+            </div>
+
+            <label className="field-label">Category</label>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>{c.icon} {c.label}</option>
+              ))}
             </select>
+
             <button type="button" className="pill" onClick={() => thumbRef.current.click()}>
               {thumb ? `Thumbnail: ${thumb.name}` : "Add thumbnail (optional, made automatically if empty)"}
             </button>
             <input ref={thumbRef} type="file" accept="image/*" hidden onChange={(e) => setThumb(e.target.files[0] || null)} />
+
             {msg.text && <p className={msg.type === "error" ? "error" : "ok-text"}>{msg.text}</p>}
+
             <button className="create-primary" disabled={busy || msg.type === "error"}>
               {busy ? "Publishing…" : `Publish ${tab === "short" ? "Short" : "video"}`}
             </button>
+            <button type="button" className="pill" onClick={() => switchTab(tab)}>Choose a different file</button>
           </form>
         )}
       </div>

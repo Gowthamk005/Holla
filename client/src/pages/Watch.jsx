@@ -9,6 +9,7 @@ import SubscribeButton from "../components/SubscribeButton.jsx";
 import VideoCard from "../components/VideoCard.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx";
 import Comments from "../components/Comments.jsx";
+import Description from "../components/Description.jsx";
 
 /* Normal (16:9) video page. Shorts are sent to the vertical Shorts viewer. */
 export default function Watch() {
@@ -24,7 +25,7 @@ export default function Watch() {
     setData(null);
     setErr("");
     setRelated([]);
-    // NOTE: no view is counted here. The player counts a view after 3 seconds of playing.
+    // no view is counted here: the player counts a view after 3 seconds of playing
     api(`/videos/${id}`)
       .then((d) => {
         if (d.video.format === "short") {
@@ -67,6 +68,7 @@ export default function Watch() {
 
   const { video, viewer } = data;
   const ch = video.owner;
+  const isOwner = user && (user.id === ch.id || user.role === "admin");
 
   return (
     <div className="watch">
@@ -87,6 +89,7 @@ export default function Watch() {
             <button className={viewer.liked ? "pill on" : "pill"} onClick={() => interact("like")}>👍 {fmtCount(video.likesCount)}</button>
             <button className={viewer.saved ? "pill on" : "pill"} onClick={() => interact("save")}>{viewer.saved ? "🔖 Saved" : "🔖 Save"}</button>
             <button className="pill" onClick={share}>{copied ? "Link copied ✓" : "↗ Share"}</button>
+            {isOwner && <Link className="pill" to={`/edit/${video.id}`}>✎ Edit</Link>}
           </div>
         </div>
 
@@ -94,7 +97,14 @@ export default function Watch() {
           <div className="muted small">
             {fmtCount(video.views)} views · {timeAgo(video.createdAt)} · {categoryLabel(video.category)}
           </div>
-          <p>{video.description || "No description."}</p>
+          <Description text={video.description} />
+          {video.hashtags?.length > 0 && (
+            <div className="tag-row">
+              {video.hashtags.map((t) => (
+                <Link key={t} to={`/tag/${t}`} className="tag-chip">#{t}</Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <Comments videoId={video.id} />

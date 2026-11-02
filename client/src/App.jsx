@@ -17,6 +17,7 @@ import YouTube from "./pages/YouTube.jsx";
 import YouTubeWatch from "./pages/YouTubeWatch.jsx";
 import Apps from "./pages/Apps.jsx";
 import Create from "./pages/Create.jsx";
+import EditVideo from "./pages/EditVideo.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import History from "./pages/History.jsx";
@@ -32,9 +33,11 @@ export default function App() {
         <Route index element={<Feed mode="home" />} />
         <Route path="trending" element={<Feed mode="trending" />} />
         <Route path="category/:cat" element={<Feed mode="category" />} />
+        <Route path="tag/:tag" element={<Feed mode="tag" />} />
         <Route path="shorts" element={<Shorts />} />
         <Route path="shorts/:id" element={<Shorts />} />
         <Route path="watch/:id" element={<Watch />} />
+        <Route path="edit/:id" element={<RequireAuth><EditVideo /></RequireAuth>} />
         <Route path="youtube" element={<YouTube />} />
         <Route path="youtube/:id" element={<YouTubeWatch />} />
         <Route path="apps" element={<Apps />} />
