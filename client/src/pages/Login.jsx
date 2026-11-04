@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { api } from "../api.js";
+import { api } from "../../api.js";
 
 const OAUTH_ERRORS = {
   google: "Google sign-in failed. Please try again.",
