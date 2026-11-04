@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { applyTheme, getTheme } from "./lib/theme.js";
 import "./styles/app.css";
 import "./styles/fixes.css";
+import "../src/components/ErrorBoundary.jsx";
 
 // apply the saved dark / light theme before the first page is drawn
 applyTheme(getTheme());
