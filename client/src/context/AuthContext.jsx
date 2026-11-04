@@ -31,6 +31,8 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await api("/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
+    // full reload clears every page's old data from memory
+    window.location.replace("/");
   };
 
   return <AuthCtx.Provider value={{ user, ready, login, logout, refresh, setUser }}>{children}</AuthCtx.Provider>;

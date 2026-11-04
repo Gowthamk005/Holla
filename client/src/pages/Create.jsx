@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api.js";
+import { upload } from "../api.js";
 import { CATEGORIES } from "../lib/constants.js";
 import { extractHashtags } from "../lib/hashtags.js";
+import { fmtBytes } from "../lib/format.js";
 
 const TABS = [
   { key: "video", label: "Video", icon: "🎬", title: "Upload a video", text: "Landscape video, 16:9, like YouTube." },
@@ -10,6 +11,34 @@ const TABS = [
   { key: "live", label: "Live", icon: "🔴", title: "Go live", text: "Live streaming needs a streaming service. Coming soon." },
   { key: "post", label: "Post", icon: "🖼️", title: "Share photos and GIFs", text: "Posts appear on your profile." },
 ];
+
+/* "45 sec", "3 min 20 sec", "1 hr 5 min" */
+function fmtTime(sec) {
+  if (sec < 60) return `${Math.max(1, Math.round(sec))} sec`;
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  if (m < 60) return `${m} min ${s} sec`;
+  return `${Math.floor(m / 60)} hr ${m % 60} min`;
+}
+
+/* live progress while the file is sent: percentage, size sent, and time left */
+function UploadProgress({ p }) {
+  const done = p.pct >= 100;
+  return (
+    <div className="upload-progress" aria-live="polite">
+      <div className="upload-bar"><i style={{ width: `${p.pct}%` }} /></div>
+      <div className="upload-line">
+        <b>{p.pct}%</b>
+        <span>{fmtBytes(p.loaded)} of {fmtBytes(p.total)}</span>
+      </div>
+      <div className="muted small">
+        {done
+          ? "Upload finished. Processing on the server…"
+          : p.etaSec == null ? "Working out time left…" : `About ${fmtTime(p.etaSec)} left`}
+      </div>
+    </div>
+  );
+}
 
 export default function Create() {
   const navigate = useNavigate();
@@ -23,6 +52,7 @@ export default function Create() {
   const [thumb, setThumb] = useState(null);
   const [form, setForm] = useState({ title: "", description: "", category: "movies", caption: "" });
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(null);
   const [msg, setMsg] = useState({ type: "", text: "" });
 
   const info = TABS.find((t) => t.key === tab);
@@ -83,28 +113,45 @@ export default function Create() {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
-    setMsg({ type: "", text: "Uploading…" });
+    setMsg({ type: "", text: "" });
     try {
+      const fd = new FormData();
+      let path;
+      let total;
       if (tab === "post") {
-        const fd = new FormData();
         images.forEach((i) => fd.append("images", i));
         fd.append("caption", form.caption);
-        await api("/posts", { method: "POST", form: fd });
+        path = "/posts";
+        total = images.reduce((n, f) => n + f.size, 0);
       } else {
-        const fd = new FormData();
         fd.append("video", file);
         if (thumb) fd.append("thumb", thumb);
         fd.append("title", form.title);
         fd.append("description", form.description);
         fd.append("category", form.category);
         fd.append("format", tab);
-        await api("/videos", { method: "POST", form: fd });
+        path = "/videos";
+        total = file.size;
       }
+
+      const started = Date.now();
+      setProgress({ pct: 0, loaded: 0, total, etaSec: null });
+      await upload(path, fd, ({ loaded }) => {
+        const secs = (Date.now() - started) / 1000;
+        const speed = secs > 0 ? loaded / secs : 0; // bytes per second so far
+        setProgress({
+          loaded,
+          total,
+          pct: Math.min(100, Math.round((loaded / total) * 100)),
+          etaSec: speed > 0 ? (total - loaded) / speed : null,
+        });
+      });
       navigate("/me");
     } catch (err) {
       setMsg({ type: "error", text: err.message });
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   }
 
@@ -133,12 +180,14 @@ export default function Create() {
             <textarea rows={3} maxLength={500} placeholder="Write a caption… use #hashtags" value={form.caption}
               onChange={(e) => setForm({ ...form, caption: e.target.value })} />
             <button type="button" className="pill" onClick={() => fileRef.current.click()}>Change photos</button>
+            {busy && progress && <UploadProgress p={progress} />}
             {msg.text && <p className={msg.type === "error" ? "error" : "ok-text"}>{msg.text}</p>}
             <button className="create-primary" disabled={busy}>{busy ? "Posting…" : "Post"}</button>
           </form>
         ) : (
           <form className="create-form" onSubmit={publish}>
             <video className="create-preview" src={preview} controls playsInline />
+            {file && <p className="muted small">File size: {fmtBytes(file.size)}</p>}
 
             <label className="field-label">Title</label>
             <input placeholder="Title (add #hashtags here too)" maxLength={100} value={form.title} required
@@ -168,12 +217,13 @@ export default function Create() {
             </button>
             <input ref={thumbRef} type="file" accept="image/*" hidden onChange={(e) => setThumb(e.target.files[0] || null)} />
 
+            {busy && progress && <UploadProgress p={progress} />}
             {msg.text && <p className={msg.type === "error" ? "error" : "ok-text"}>{msg.text}</p>}
 
             <button className="create-primary" disabled={busy || msg.type === "error"}>
               {busy ? "Publishing…" : `Publish ${tab === "short" ? "Short" : "video"}`}
             </button>
-            <button type="button" className="pill" onClick={() => switchTab(tab)}>Choose a different file</button>
+            <button type="button" className="pill" disabled={busy} onClick={() => switchTab(tab)}>Choose a different file</button>
           </form>
         )}
       </div>

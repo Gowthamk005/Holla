@@ -7,6 +7,7 @@ import { applyTheme, getTheme } from "./lib/theme.js";
 import "./styles/app.css";
 import "./styles/fixes.css";
 import "../src/components/ErrorBoundary.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // apply the saved dark / light theme before the first page is drawn
 applyTheme(getTheme());
@@ -20,7 +21,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
+        <ErrorBoundary>
         <App />
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

@@ -38,8 +38,8 @@ export default function Login({ mode = "login" }) {
         ? { name: form.name, username: form.username, password: form.password }
         : { username: form.username, password: form.password };
       await login(payload, isRegister ? "register" : "login");
-      navigate(next, { replace: true });
-    } catch (e2) {
+      window.location.replace(next);
+        } catch (e2) {
       setErr(e2.message);
     } finally {
       setBusy(false);

@@ -4,11 +4,12 @@ import path from "path";
 import crypto from "crypto";
 import { Message } from "../models/Message.js";
 import { User } from "../models/User.js";
+import { findBetween } from "../models/Friendship.js";
 import { requireAuth } from "../middleware/auth.js";
 import { config } from "../config.js";
 import { fail } from "../utils/errors.js";
 import { isId } from "../utils/ids.js";
-import { msgOut, pubUser } from "../utils/serialize.js";
+import { msgOut, pubUser, mini } from "../utils/serialize.js";
 import { emitToUser } from "../utils/realtime.js";
 import { isOnline } from "../utils/presence.js";
 import { uploadChat } from "../utils/chatUpload.js";
@@ -37,12 +38,19 @@ async function findRecipient(id) {
   return u;
 }
 
-/* saves the message, pushes it to both people in realtime, updates their unread counts */
-async function deliver(message) {
+/* saves the message, pushes it to both people in realtime, updates their unread counts.
+   When the two are friends, the receiver also gets "chat:notify" (sender info) for the popup alert. */
+async function deliver(message, sender) {
   const out = msgOut(message);
   emitToUser(message.from, "message:new", { message: out });
   emitToUser(message.to, "message:new", { message: out });
   emitToUser(message.to, "messages:unread", { count: await unreadFor(message.to) });
+  if (sender) {
+    const rel = await findBetween(message.from, message.to);
+    if (rel?.status === "accepted") {
+      emitToUser(message.to, "chat:notify", { message: out, sender: mini(sender) });
+    }
+  }
   return out;
 }
 
@@ -151,7 +159,7 @@ router.post("/:userId", async (req, res) => {
   if (String(to._id) === String(req.user._id)) fail(400, "You cannot message yourself.");
 
   const message = await Message.create({ from: req.user._id, to: to._id, text });
-  res.status(201).json({ message: await deliver(message) });
+  res.status(201).json({ message: await deliver(message, req.user) });
 });
 
 /* POST /api/messages/:userId/attachment  (multipart: file, optional text = caption) */
@@ -184,7 +192,7 @@ router.post(
         text: caption,
         attachment: { type: kind.type, url, name: sanitizeName(file.originalname), size: file.size, mime: kind.mime },
       });
-      res.status(201).json({ message: await deliver(message) });
+      res.status(201).json({ message: await deliver(message, req.user) });
     } catch (err) {
       await removeUpload(url);
       throw err;

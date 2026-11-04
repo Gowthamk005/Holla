@@ -19,7 +19,12 @@ export function setAuthCookie(res, token) {
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie(config.cookieName, { path: "/" });
+  res.clearCookie(config.cookieName, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: config.isProd,
+    path: "/",
+  });
 }
 
 /* returns the user for a token, or null (bad token, deleted or disabled user) */
