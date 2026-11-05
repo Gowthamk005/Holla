@@ -20,6 +20,7 @@ const router = Router();
 router.use(requireAuth);
 
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
+const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 const PUBLIC_FIELDS = "username name avatarUrl bannerUrl bio subscribersCount createdAt lastSeenAt";
 
 const unreadFor = (userId) => Message.countDocuments({ to: userId, readAt: null });
@@ -160,6 +161,23 @@ router.post("/:userId", async (req, res) => {
 
   const message = await Message.create({ from: req.user._id, to: to._id, text });
   res.status(201).json({ message: await deliver(message, req.user) });
+});
+
+/* POST /api/messages/message/:messageId/react  { emoji } -> { message }
+   Only the two people in the chat can react. Same emoji again removes your reaction. */
+router.post("/message/:messageId/react", async (req, res) => {
+  if (!isId(req.params.messageId)) fail(404, "Message not found.");
+  const emoji = String(req.body?.emoji || "");
+  if (!REACTIONS.includes(emoji)) fail(400, "Pick a reaction from the list.");
+  const m = await Message.findById(req.params.messageId);
+  if (!m || m.deletedAt) fail(404, "Message not found.");
+  const me = String(req.user._id);
+  if (String(m.from) !== me && String(m.to) !== me) fail(404, "Message not found.");
+  const mine = m.reactions.find((r) => String(r.user) === me);
+  m.reactions = m.reactions.filter((r) => String(r.user) !== me);
+  if (!mine || mine.emoji !== emoji) m.reactions.push({ user: req.user._id, emoji });
+  await m.save();
+  res.json({ message: notifyBoth(m) });
 });
 
 /* POST /api/messages/:userId/attachment  (multipart: file, optional text = caption) */

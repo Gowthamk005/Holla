@@ -31,10 +31,7 @@ export const videoOut = (v) => ({
   views: v.views || 0,
   likesCount: v.likesCount || 0,
   createdAt: v.createdAt,
-  renditions: (v.renditions || []).map((r) => ({ label: r.label, height: r.height, url: r.url })),  
-    format: v.format || "video",
-      commentsCount: v.commentsCount || 0,
-    owner: pubUser(v.owner),
+  owner: pubUser(v.owner),
 });
 
 export const msgOut = (m) => {
@@ -52,6 +49,7 @@ export const msgOut = (m) => {
     readAt: m.readAt || null,
     editedAt: m.editedAt || null,
     deletedAt: m.deletedAt || null,
+    reactions: (m.reactions || []).map((r) => ({ userId: String(r.user), emoji: r.emoji })),
   };
 };
 

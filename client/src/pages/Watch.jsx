@@ -10,6 +10,8 @@ import VideoCard from "../components/VideoCard.jsx";
 import VideoPlayer from "../components/VideoPlayer.jsx";
 import Comments from "../components/Comments.jsx";
 import Description from "../components/Description.jsx";
+import ShareButton from "../components/ShareButton.jsx";
+import SaveToPlaylist from "../components/SaveToPlaylist.jsx";
 
 /* Normal (16:9) video page. Shorts are sent to the vertical Shorts viewer. */
 export default function Watch() {
@@ -19,7 +21,6 @@ export default function Watch() {
   const [data, setData] = useState(null);
   const [related, setRelated] = useState([]);
   const [err, setErr] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setData(null);
@@ -56,13 +57,6 @@ export default function Watch() {
     }
   }
 
-  function share() {
-    navigator.clipboard?.writeText(window.location.href).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    });
-  }
-
   if (err) return <div className="empty"><h2>{err}</h2><Link to="/">Back to Home</Link></div>;
   if (!data) return <p className="muted">Loading…</p>;
 
@@ -88,7 +82,8 @@ export default function Watch() {
           <div className="action-row">
             <button className={viewer.liked ? "pill on" : "pill"} onClick={() => interact("like")}>👍 {fmtCount(video.likesCount)}</button>
             <button className={viewer.saved ? "pill on" : "pill"} onClick={() => interact("save")}>{viewer.saved ? "🔖 Saved" : "🔖 Save"}</button>
-            <button className="pill" onClick={share}>{copied ? "Link copied ✓" : "↗ Share"}</button>
+            <ShareButton url={`${window.location.origin}/watch/${video.id}`} title={video.title} />
+            <SaveToPlaylist videoId={video.id} />
             {isOwner && <Link className="pill" to={`/edit/${video.id}`}>✎ Edit</Link>}
           </div>
         </div>

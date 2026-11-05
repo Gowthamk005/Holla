@@ -13,12 +13,22 @@ const attachmentSchema = new Schema(
   { _id: false }
 );
 
+// one reaction per person; the same emoji again removes it
+const reactionSchema = new Schema(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    emoji: { type: String, required: true, maxlength: 8 },
+  },
+  { _id: false }
+);
+
 const messageSchema = new Schema(
   {
     from: { type: Schema.Types.ObjectId, ref: "User", required: true },
     to: { type: Schema.Types.ObjectId, ref: "User", required: true },
     text: { type: String, default: "", maxlength: 2000 },
     attachment: { type: attachmentSchema, default: undefined },
+    reactions: { type: [reactionSchema], default: [] },
     readAt: { type: Date, default: null },
     editedAt: { type: Date, default: null },
     deletedAt: { type: Date, default: null },

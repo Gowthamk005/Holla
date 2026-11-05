@@ -211,6 +211,15 @@ export default function Messages() {
     Date.now() - new Date(m.createdAt).getTime() < EDIT_MINUTES * 60 * 1000;
 
   /* ---- selection ---- */
+  // reacts to a message (one reaction per person; the same emoji again removes it)
+  async function react(id, emoji) {
+    try {
+      await api(`/messages/message/${id}/react`, { method: "POST", body: { emoji } });
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
   const mine = (id) => active?.messages?.find((m) => m.id === id)?.from === user.id;
   const selectable = (m) => !m.deletedAt;
 
@@ -321,6 +330,7 @@ export default function Messages() {
                   selectMode={selectMode}
                   onPress={() => selectable(m) && toggleSelect(m.id)}
                   onTap={() => selectable(m) && toggleSelect(m.id)}
+                  onReact={(emoji) => react(m.id, emoji)}
                 />
               ))}
               <div ref={bottomRef} />

@@ -4,6 +4,7 @@ import { api } from "../api.js";
 import { CATEGORIES, categoryLabel } from "../lib/constants.js";
 import VideoCard from "../components/VideoCard.jsx";
 import ShortsRow from "../components/ShortsRow.jsx";
+import ContinueRow from "../components/ContinueRow.jsx";
 
 /* Home (/), Trending (/trending), category (/category/:cat) and hashtag (/tag/:tag) pages */
 export default function Feed({ mode = "home" }) {
@@ -39,6 +40,8 @@ export default function Feed({ mode = "home" }) {
   return (
     <div>
       {title && <h1 className="page-title">{title}</h1>}
+
+      {mode === "home" && !q && <ContinueRow />}
 
       {mode === "home" && !q && (
         <div className="chips">

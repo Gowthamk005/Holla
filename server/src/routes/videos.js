@@ -14,6 +14,7 @@ import { isId } from "../utils/ids.js";
 import { OWNER_SELECT, videoOut } from "../utils/serialize.js";
 import { processVideo } from "../utils/transcode.js";
 import { probe } from "../utils/probe.js";
+import { cropToVertical } from "../utils/shortCrop.js";
 import { extractHashtags } from "../utils/hashtags.js";
 
 const router = Router();
@@ -45,7 +46,7 @@ router.post(
   async (req, res) => {
     const video = req.files?.video?.[0];
     const thumb = req.files?.thumb?.[0];
-    const videoUrl = video && `/uploads/videos/${video.filename}`;
+    let videoUrl = video && `/uploads/videos/${video.filename}`;
     const thumbnailUrl = thumb && `/uploads/thumbs/${thumb.filename}`;
 
     try {
@@ -58,10 +59,21 @@ router.post(
       const description = String(req.body.description || "").slice(0, 500);
 
       // shape check (needs FFmpeg; skipped if it is not installed)
-      const info = await probe(path.join(config.uploadsDir, "videos", video.filename));
+      const inputPath = path.join(config.uploadsDir, "videos", video.filename);
+      const info = await probe(inputPath);
+      let videoFile = video.filename;
+      let size = video.size;
       if (info && info.width && info.height) {
-        if (format === "short" && info.height < info.width * 1.2) {
-          fail(400, "Shorts must be vertical (9:16). Choose Video for landscape clips.");
+        if (format === "short" && info.width > info.height * 1.2) {
+          // a landscape clip sent as a Short is cropped to 9:16 automatically (centre crop)
+          try {
+            const out = await cropToVertical(inputPath);
+            videoFile = out.fileName;
+            size = out.size;
+            videoUrl = `/uploads/videos/${videoFile}`;
+          } catch (err) {
+            fail(400, "Could not convert this video to 9:16. Try uploading it as a Video instead.");
+          }
         }
         if (format === "video" && info.width < info.height * 1.2) {
           fail(400, "Videos must be landscape (16:9). Choose Short for vertical clips.");
@@ -76,13 +88,13 @@ router.post(
         format,
         hashtags: extractHashtags(`${title} ${description}`),
         videoUrl,
-        videoFile: video.filename,
+        videoFile,
         thumbnailUrl: thumbnailUrl || "",
         thumbFile: thumb ? thumb.filename : "",
         duration: info?.duration
           ? Math.round(info.duration)
           : Math.min(6 * 3600, Math.max(0, parseFloat(req.body.duration) || 0)),
-        size: video.size,
+        size,
       });
       await doc.populate("owner", OWNER_SELECT);
       processVideo(doc._id).catch(() => {}); // automatic thumbnail + qualities in the background

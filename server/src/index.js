@@ -21,8 +21,8 @@ import walletRoutes from "./routes/wallet.js";
 import adminRoutes from "./routes/admin.js";
 import youtubeRoutes from "./routes/youtube.js";
 import appRoutes from "./routes/apps.js";
-import postRoutes from "./routes/posts.js";
-import commentRoutes from "./routes/comments.js";
+import historyRoutes from "./routes/history.js";
+import playlistRoutes from "./routes/playlists.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -50,8 +50,8 @@ app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/youtube", youtubeRoutes);
 app.use("/api/apps", appRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/comments", commentRoutes);
+app.use("/api/history", historyRoutes);
+app.use("/api/playlists", playlistRoutes);
 
 app.use("/api", (req, res) => res.status(404).json({ error: "Not found." }));
 

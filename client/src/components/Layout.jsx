@@ -139,6 +139,7 @@ export default function Layout() {
             <Link to="/me">👤 Your profile</Link>
             <Link to={`/c/${user.username}`}>📺 Your channel</Link>
             <Link to="/people">👥 Friends &amp; people</Link>
+            <Link to="/playlists">🎵 Playlists</Link>
             <Link to="/history">🕘 Watch history</Link>
             <Link to="/settings">⚙️ Settings</Link>
             <Link to="/studio">🎬 Studio</Link>
@@ -168,6 +169,7 @@ export default function Layout() {
         <NavLink to="/history" className="nav-item">🕘 History</NavLink>
         <NavLink to="/library/like" className="nav-item">♡ Liked videos</NavLink>
         <NavLink to="/library/save" className="nav-item">◷ Watch later</NavLink>
+        <NavLink to="/playlists" className="nav-item">🎵 Playlists</NavLink>
         <NavLink to="/wallet" className="nav-item">💳 Olla Pay</NavLink>
         {user && <NavLink to="/create" className="nav-item sidebar-create">＋ Create</NavLink>}
         <div className="sidebar-title">Categories</div>

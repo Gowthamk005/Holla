@@ -6,6 +6,7 @@ import VideoPlayer from "../components/VideoPlayer.jsx";
 import Avatar from "../components/Avatar.jsx";
 import Comments from "../components/Comments.jsx";
 import { fmtCount } from "../lib/format.js";
+import ShareButton from "../components/ShareButton.jsx";
 
 /* Vertical (9:16) Shorts viewer. Swipe or scroll up and down; only the visible short plays. */
 export default function Shorts() {
@@ -132,14 +133,10 @@ export default function Shorts() {
                   <span>💬</span>
                   <small>{fmtCount(v.commentsCount || 0)}</small>
                 </button>
-                <button
-                  className="side-btn"
-                  aria-label="Share"
-                  onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/shorts/${v.id}`)}
-                >
+                <ShareButton url={`${window.location.origin}/shorts/${v.id}`} title={v.title} className="side-btn">
                   <span>↗</span>
                   <small>Share</small>
-                </button>
+                </ShareButton>
               </div>
             </section>
           );

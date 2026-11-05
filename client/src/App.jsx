@@ -21,6 +21,7 @@ import EditVideo from "./pages/EditVideo.jsx";
 import Profile from "./pages/Profile.jsx";
 import Settings from "./pages/Settings.jsx";
 import History from "./pages/History.jsx";
+import Playlists from "./pages/Playlists.jsx";
 
 export default function App() {
   return (
@@ -53,6 +54,8 @@ export default function App() {
         <Route path="me" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="history" element={<RequireAuth><History /></RequireAuth>} />
+        <Route path="playlists" element={<RequireAuth><Playlists /></RequireAuth>} />
+        <Route path="playlists/:id" element={<RequireAuth><Playlists /></RequireAuth>} />
         <Route path="*" element={<div className="empty"><h2>Page not found</h2></div>} />
       </Route>
     </Routes>

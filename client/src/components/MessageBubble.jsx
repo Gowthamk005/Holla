@@ -1,5 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { clockTime, fmtBytes } from "../lib/format.js";
+
+const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function Attachment({ a }) {
   if (a.type === "image") {
@@ -27,10 +29,12 @@ function Attachment({ a }) {
  * - Press and hold (about half a second) to start selecting.
  * - While selecting, a tap toggles the message.
  * - `actions` is the ⋯ menu for your own messages.
+ * - ☺ opens the reaction picker. `onReact(emoji)` is called when one is chosen.
  */
-export default function MessageBubble({ m, mine, actions, selected = false, selectMode = false, onPress, onTap }) {
+export default function MessageBubble({ m, mine, actions, selected = false, selectMode = false, onPress, onTap, onReact }) {
   const timer = useRef(null);
   const fired = useRef(false);
+  const [picking, setPicking] = useState(false);
   const cls = mine ? "msg mine" : "msg theirs";
 
   if (m.deletedAt) {
@@ -41,6 +45,13 @@ export default function MessageBubble({ m, mine, actions, selected = false, sele
       </div>
     );
   }
+
+  // how many people reacted with each emoji
+  const counts = {};
+  (m.reactions || []).forEach((r) => {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+  });
+  const groups = Object.entries(counts);
 
   const start = (e) => {
     if (e.target.closest?.("button, a, video, audio")) return;
@@ -78,7 +89,24 @@ export default function MessageBubble({ m, mine, actions, selected = false, sele
           {m.attachment && <Attachment a={m.attachment} />}
           {m.text && <div className="bubble-text">{m.text}</div>}
         </div>
+        {!selectMode && onReact && (
+          <button className="react-btn" onClick={() => setPicking((p) => !p)} aria-label="React to message">☺</button>
+        )}
       </div>
+      {picking && (
+        <div className="react-bar">
+          {REACTIONS.map((e) => (
+            <button key={e} className="react-opt" onClick={() => { setPicking(false); onReact?.(e); }} aria-label={`React ${e}`}>{e}</button>
+          ))}
+        </div>
+      )}
+      {groups.length > 0 && (
+        <div className="react-chips">
+          {groups.map(([e, n]) => (
+            <span key={e} className="react-chip">{e}{n > 1 && <small> {n}</small>}</span>
+          ))}
+        </div>
+      )}
       <div className="msg-meta">
         {clockTime(m.createdAt)}
         {m.editedAt && " · edited"}

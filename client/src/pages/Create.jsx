@@ -53,6 +53,8 @@ export default function Create() {
   const [form, setForm] = useState({ title: "", description: "", category: "movies", caption: "" });
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null);
+  const [dims, setDims] = useState(null);
+  const [previewError, setPreviewError] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
 
   const info = TABS.find((t) => t.key === tab);
@@ -82,6 +84,8 @@ export default function Create() {
 
   // checks the shape of the chosen video before the details step
   function chooseVideo(f) {
+    setDims(null);
+    setPreviewError(false);
     setFile(f);
     const url = URL.createObjectURL(f);
     setPreview(url);
@@ -90,10 +94,11 @@ export default function Create() {
     probe.onloadedmetadata = () => {
       const w = probe.videoWidth;
       const h = probe.videoHeight;
+      setDims({ w, h });
       if (tab === "video" && h > w * 0.85) {
         setMsg({ type: "error", text: "This looks vertical. Choose Short (9:16) instead." });
       } else if (tab === "short" && w > h * 0.85) {
-        setMsg({ type: "error", text: "This looks landscape. Choose Video (16:9) instead." });
+        setMsg({ type: "", text: "This is a landscape video. It will be cropped to 9:16 for Shorts automatically (the sides are cut off)." });
       } else {
         setMsg({ type: "", text: "" });
       }
@@ -186,8 +191,16 @@ export default function Create() {
           </form>
         ) : (
           <form className="create-form" onSubmit={publish}>
-            <video className="create-preview" src={preview} controls playsInline />
-            {file && <p className="muted small">File size: {fmtBytes(file.size)}</p>}
+            <div
+              className={`preview-box ${dims && dims.h > dims.w ? "vertical" : "landscape"}`}
+              style={dims ? { aspectRatio: `${dims.w} / ${dims.h}` } : undefined}
+            >
+              <video src={preview} controls playsInline preload="metadata" onError={() => setPreviewError(true)} />
+            </div>
+            {previewError && (
+              <p className="muted small">Your phone cannot show a preview of this file. Check it plays in your gallery before uploading.</p>
+            )}
+            {file && <p className="muted small">{dims ? `${dims.w} × ${dims.h} · ` : ""}File size: {fmtBytes(file.size)}</p>}
 
             <label className="field-label">Title</label>
             <input placeholder="Title (add #hashtags here too)" maxLength={100} value={form.title} required
