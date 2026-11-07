@@ -5,20 +5,15 @@ import { api } from "../api.js";
 import { disconnectSocket, getSocket } from "../lib/socket.js";
 import { CATEGORIES } from "../lib/constants.js";
 import { useAppTime } from "../hooks/useAppTime.js";
-import { getTheme, toggleTheme } from "../lib/theme.js";
-import { alertsOn, setAlerts, systemAlert } from "../lib/notify.js";
-import Avatar from "./Avatar.jsx";
+import { alertsOn, systemAlert } from "../lib/notify.js";
 import ChatToast from "./ChatToast.jsx";
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [q, setQ] = useState("");
-  const [menu, setMenu] = useState(false);
   const [unread, setUnread] = useState(0);
-  const [theme, setTheme] = useState(getTheme);
-  const [alerts, setAlertsState] = useState(alertsOn);
   const [toast, setToast] = useState(null);
   const pathRef = useRef(location.pathname);
 
@@ -67,32 +62,11 @@ export default function Layout() {
     api("/messages/unread").then((d) => setUnread(d.count)).catch(() => {});
   }, [user?.id]);
 
-  // close the account menu whenever the page changes
-  useEffect(() => {
-    setMenu(false);
-  }, [location.pathname]);
-
   const closeToast = useCallback(() => setToast(null), []);
 
   function search(e) {
     e.preventDefault();
     navigate(`/?q=${encodeURIComponent(q.trim())}`);
-  }
-
-  async function doLogout() {
-    setMenu(false);
-    await logout();
-    navigate("/");
-  }
-
-  function switchTheme() {
-    setTheme(toggleTheme());
-  }
-
-  async function toggleAlerts() {
-    const next = !alerts;
-    setAlertsState(next);
-    await setAlerts(next);
   }
 
   const loginLink = `/login?next=${encodeURIComponent(location.pathname)}`;
@@ -113,49 +87,11 @@ export default function Layout() {
               💬{unread > 0 && <span className="badge">{unread > 9 ? "9+" : unread}</span>}
             </Link>
           )}
-          {user ? (
-            <button className="avatar-btn" onClick={() => setMenu((m) => !m)} aria-label="Account menu">
-              <Avatar user={user} size="sm" />
-            </button>
-          ) : (
-            <Link to={loginLink} className="login-btn">Login</Link>
-          )}
+          {!user && <Link to={loginLink} className="login-btn">Login</Link>}
         </div>
       </header>
 
       <ChatToast alert={toast} onClose={closeToast} />
-
-      {menu && user && (
-        <>
-          <div className="menu-scrim" onClick={() => setMenu(false)} />
-          <div className="acct-menu" role="menu">
-            <div className="acct-head">
-              <Avatar user={user} size="sm" />
-              <div>
-                <b>{user.name}</b>
-                <small>@{user.username}</small>
-              </div>
-            </div>
-            <Link to="/me">👤 Your profile</Link>
-            <Link to={`/c/${user.username}`}>📺 Your channel</Link>
-            <Link to="/people">👥 Friends &amp; people</Link>
-            <Link to="/playlists">🎵 Playlists</Link>
-            <Link to="/history">🕘 Watch history</Link>
-            <Link to="/settings">⚙️ Settings</Link>
-            <Link to="/studio">🎬 Studio</Link>
-            <Link to="/wallet">💳 Olla Pay</Link>
-            {user.role === "admin" && <Link to="/admin">🛠 Admin</Link>}
-            <div className="acct-sep" />
-            <button className="acct-theme" onClick={toggleAlerts}>
-              <span>{alerts ? "🔔 Chat alerts: On" : "🔕 Chat alerts: Off"}</span>
-            </button>
-            <button className="acct-theme" onClick={switchTheme}>
-              <span>{theme === "light" ? "🌙 Dark mode" : "☀️ Light mode"}</span>
-            </button>
-            <button className="acct-danger" onClick={doLogout}>⎋ Log out</button>
-          </div>
-        </>
-      )}
 
       <aside className="sidebar">
         <NavLink to="/" end className="nav-item">⌂ Home</NavLink>
@@ -171,6 +107,7 @@ export default function Layout() {
         <NavLink to="/library/save" className="nav-item">◷ Watch later</NavLink>
         <NavLink to="/playlists" className="nav-item">🎵 Playlists</NavLink>
         <NavLink to="/wallet" className="nav-item">💳 Olla Pay</NavLink>
+        {user && <NavLink to="/me" className="nav-item">👤 My profile</NavLink>}
         {user && <NavLink to="/create" className="nav-item sidebar-create">＋ Create</NavLink>}
         <div className="sidebar-title">Categories</div>
         {CATEGORIES.map((c) => (
@@ -183,7 +120,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* bottom bar: Home, Shorts, + (icon only), Chat, People, You */}
+      {/* bottom bar: Home, Shorts, + (icon only), Chat, People, You (your profile) */}
       <nav className="mobile-nav">
         <NavLink to="/" end><span>⌂</span>Home</NavLink>
         <NavLink to="/shorts"><span>📱</span>Shorts</NavLink>

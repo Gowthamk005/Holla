@@ -18,7 +18,7 @@ import YouTubeWatch from "./pages/YouTubeWatch.jsx";
 import Apps from "./pages/Apps.jsx";
 import Create from "./pages/Create.jsx";
 import EditVideo from "./pages/EditVideo.jsx";
-import Profile from "./pages/Profile.jsx";
+import MyProfile from "./pages/MyProfile.jsx";
 import Settings from "./pages/Settings.jsx";
 import History from "./pages/History.jsx";
 import Playlists from "./pages/Playlists.jsx";
@@ -51,7 +51,7 @@ export default function App() {
         <Route path="wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
         <Route path="studio" element={<RequireAuth><Studio /></RequireAuth>} />
         <Route path="admin" element={<RequireAuth role="admin"><Admin /></RequireAuth>} />
-        <Route path="me" element={<RequireAuth><Profile /></RequireAuth>} />
+        <Route path="me" element={<RequireAuth><MyProfile /></RequireAuth>} />
         <Route path="settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="history" element={<RequireAuth><History /></RequireAuth>} />
         <Route path="playlists" element={<RequireAuth><Playlists /></RequireAuth>} />
