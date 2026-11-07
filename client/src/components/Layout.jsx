@@ -7,6 +7,7 @@ import { CATEGORIES } from "../lib/constants.js";
 import { useAppTime } from "../hooks/useAppTime.js";
 import { alertsOn, systemAlert } from "../lib/notify.js";
 import ChatToast from "./ChatToast.jsx";
+import Avatar from "./Avatar.jsx";
 
 export default function Layout() {
   const { user } = useAuth();
@@ -132,7 +133,10 @@ export default function Layout() {
           {unread > 0 && <b className="badge">{unread > 9 ? "9+" : unread}</b>}
         </NavLink>
         <NavLink to={user ? "/people" : loginLink}><span>👥</span>People</NavLink>
-        <NavLink to={user ? "/me" : loginLink}><span>👤</span>{user ? "You" : "Login"}</NavLink>
+        <NavLink to={user ? "/me" : loginLink}>
+          {user ? <span className="nav-avatar"><Avatar user={user} size="sm" /></span> : <span>👤</span>}
+          {user ? "You" : "Login"}
+        </NavLink>
       </nav>
     </div>
   );

@@ -229,3 +229,7 @@ body, body * { font-family: "Times New Roman", Times, serif; }
 .mp-avatar-wrap .avatar { border: 4px solid var(--bg); }
 .mp-avatar-edit { position: absolute; right: -4px; bottom: -4px; width: 32px; height: 32px; border-radius: 50%; background: var(--panel); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
 @media (max-width: 800px) { .mp-banner { height: 120px; } }
+
+/* ---------- bottom bar: your profile picture instead of the person icon ---------- */
+.mobile-nav .nav-avatar { display: block; height: 26px; }
+.mobile-nav .nav-avatar .avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 12px; }
