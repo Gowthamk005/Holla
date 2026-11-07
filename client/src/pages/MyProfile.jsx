@@ -7,13 +7,15 @@ import Avatar from "../components/Avatar.jsx";
 
 /* Your profile (bottom "You" tab): settings, channel, watch history, playlists, saved videos, more. */
 export default function MyProfile() {
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
   const navigate = useNavigate();
   const [history, setHistory] = useState(null);
   const [playlists, setPlaylists] = useState(null);
   const [saved, setSaved] = useState(null);
   const [q, setQ] = useState("");
   const [alerts, setAlertsState] = useState(alertsOn);
+  const [busy, setBusy] = useState("");
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     api("/history").then((d) => setHistory(d.items.filter((i) => i.video).slice(0, 12))).catch(() => setHistory([]));
@@ -30,6 +32,23 @@ export default function MyProfile() {
     const next = !alerts;
     setAlertsState(next);
     await setAlerts(next);
+  }
+
+  // uploads a new profile picture ("avatar") or banner ("banner"), then shows it everywhere
+  async function uploadPicture(kind, file) {
+    if (!file) return;
+    setBusy(kind);
+    setErr("");
+    const fd = new FormData();
+    fd.append("image", file);
+    try {
+      const r = await api(`/me/${kind}`, { method: "POST", form: fd });
+      setUser(r.user);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setBusy("");
+    }
   }
 
   async function doLogout() {
@@ -70,8 +89,26 @@ export default function MyProfile() {
         <Link to="/settings" className="mp-settings">⚙ Settings</Link>
       </div>
 
+      <section className="mp-banner-wrap">
+        <div className="mp-banner" style={user.bannerUrl ? { backgroundImage: `url(${user.bannerUrl})` } : undefined}>
+          <label className="pill mp-banner-btn">
+            {busy === "banner" ? "Uploading…" : "📷 Change banner"}
+            <input type="file" accept="image/*" hidden disabled={!!busy}
+              onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; uploadPicture("banner", f); }} />
+          </label>
+        </div>
+      </section>
+
       <section className="mp-head">
-        <Avatar user={user} size="lg" />
+        <div className="mp-avatar-wrap">
+          <Avatar user={user} size="lg" />
+          <label className="mp-avatar-edit" title="Change profile picture" aria-label="Change profile picture">
+            {busy === "avatar" ? "…" : "📷"}
+            <input type="file" accept="image/*" hidden disabled={!!busy}
+              onChange={(e) => { const f = e.target.files[0]; e.target.value = ""; uploadPicture("avatar", f); }} />
+          </label>
+        </div>
+        {err && <p className="error small">{err}</p>}
         <h1 className="mp-name">{user.name}</h1>
         <div className="muted small">@{user.username}</div>
         <Link to={`/c/${user.username}`} className="pill mp-channel">View channel</Link>
